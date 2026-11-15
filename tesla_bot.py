@@ -17,7 +17,7 @@ ZIP_KODLARI = ["34000", "06000", "35000"]
 URL = "https://www.tesla.com/tr_TR/inventory/used/my?arrangeby=plh&zip={zip}&range=0"
 """
 
-ZIP_KODLARI = ["63000"]
+ZIP_KODLARI = ["10115", "80331", "50667"]
 URL = "https://www.tesla.com/de_DE/inventory/used/my?arrangeby=plh&zip={zip}&range=0"
 GORULENLER = pathlib.Path("gorulenler.json")
 
@@ -60,7 +60,7 @@ def ozet(a):
         "vin": a.get("VIN"),
         "metin": (
             f"🚗 {a.get('Model')} {a.get('TrimName') or ''} | {a.get('Year')}\n"
-            f"💰 {fiyat} TL | 🛣 {a.get('Odometer')} km\n"
+            f"💰 {fiyat}  | 🛣 {a.get('Odometer')} km\n"
             f"🎨 {a.get('PAINT') or ''} | 📍 {a.get('City') or ''}"
         ),
     }
@@ -73,7 +73,7 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)  # xvfb ile çalışır
-        page = browser.new_context(locale="tr-TR").new_page()
+        page = browser.new_context(locale="de-DE").new_page()
         for z in ZIP_KODLARI:
             try:
                 for a in sayfayi_cek(page, z):
