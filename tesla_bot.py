@@ -12,8 +12,13 @@ import ssl
 from email.message import EmailMessage
 from playwright.sync_api import sync_playwright
 
+"""
 ZIP_KODLARI = ["34000", "06000", "35000"]
 URL = "https://www.tesla.com/tr_TR/inventory/used/my?arrangeby=plh&zip={zip}&range=0"
+"""
+
+ZIP_KODLARI = ["63000"]
+URL = "https://www.tesla.com/de_DE/inventory/used/my?arrangeby=plh&zip={zip}&range=0"
 GORULENLER = pathlib.Path("gorulenler.json")
 
 GONDEREN = os.environ["MAIL_GONDEREN"]   # Gmail adresiniz
