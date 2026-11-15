@@ -1,5 +1,5 @@
 """
-Tesla Türkiye ikinci el envanterini tarar, yeni araç çıkarsa Telegram'a mesaj atar.
+Tesla Türkiye ikinci el envanterini tarar, yeni araç çıkarsa e-posta gönderir.
 GitHub Actions üzerinde zamanlanmış çalışmak için hazırlandı.
 """
 
@@ -7,24 +7,29 @@ import json
 import os
 import pathlib
 
-import requests
+import smtplib
+import ssl
+from email.message import EmailMessage
 from playwright.sync_api import sync_playwright
 
 ZIP_KODLARI = ["34000", "06000", "35000"]
 URL = "https://www.tesla.com/tr_TR/inventory/used/my?arrangeby=plh&zip={zip}&range=0"
 GORULENLER = pathlib.Path("gorulenler.json")
 
-TOKEN = os.environ["TELEGRAM_TOKEN"]
-CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+GONDEREN = os.environ["MAIL_GONDEREN"]   # Gmail adresiniz
+SIFRE = os.environ["MAIL_SIFRE"]         # Gmail "uygulama şifresi"
+ALICI = os.environ.get("MAIL_ALICI") or GONDEREN
 
 
-def telegram_gonder(metin):
-    r = requests.post(
-        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        json={"chat_id": CHAT_ID, "text": metin, "disable_web_page_preview": True},
-        timeout=30,
-    )
-    r.raise_for_status()
+def mail_gonder(konu, metin):
+    msg = EmailMessage()
+    msg["From"] = GONDEREN
+    msg["To"] = ALICI
+    msg["Subject"] = konu
+    msg.set_content(metin)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as smtp:
+        smtp.login(GONDEREN, SIFRE)
+        smtp.send_message(msg)
 
 
 def sayfayi_cek(page, zip_kodu):
@@ -84,13 +89,13 @@ def main():
     yeniler = [o for v, o in bulunanlar.items() if v not in gorulen]
 
     if ilk_calisma:
-        telegram_gonder(f"✅ Bot çalıştı. Şu an {len(bulunanlar)} araç var. Yenileri bildireceğim.")
-    else:
-        for o in yeniler[:20]:
-            telegram_gonder(
-                "🆕 Yeni araç!\n" + o["metin"]
-                + f"\nhttps://www.tesla.com/tr_TR/m3/order/{o['vin']}"
-            )
+        mail_gonder("Tesla Bot çalıştı", f"Şu an {len(bulunanlar)} araç var. Yenileri bildireceğim.")
+    elif yeniler:
+        govde = "\n\n".join(
+            o["metin"] + f"\nhttps://www.tesla.com/tr_TR/m3/order/{o['vin']}"
+            for o in yeniler
+        )
+        mail_gonder(f"🆕 {len(yeniler)} yeni Tesla ilanı", govde)
 
     GORULENLER.write_text(json.dumps(sorted(gorulen | set(bulunanlar))))
 
