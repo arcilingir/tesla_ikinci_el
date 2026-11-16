@@ -50,6 +50,9 @@ def sayfayi_cek(page, zip_kodu):
     page.on("response", yakala)
     page.goto(URL.format(zip=zip_kodu), wait_until="networkidle", timeout=60000)
     page.wait_for_timeout(3000)
+
+    print(f"[{zip_kodu}] Başlık: {page.title()!r} | Yakalanan: {len(sonuclar)}")
+    
     page.remove_listener("response", yakala)
     return sonuclar
 
